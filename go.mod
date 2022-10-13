@@ -3,6 +3,7 @@ module github.com/willf/opensearch-doc
 go 1.19
 
 require (
+	github.com/opensearch-project/opensearch-go v1.1.0
 	github.com/spf13/cobra v1.6.0
 	github.com/spf13/viper v1.13.0
 )

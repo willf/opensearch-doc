@@ -22,7 +22,26 @@ import (
 var bulkCmd = &cobra.Command{
 	Use:   "bulk",
 	Short: "Add documents to an index",
-	Long:  `Add documents to an opensearch index.`,
+	Long: `
+	Add documents to an OpenSearch index.
+
+	Documents are read from stdin, one per line, and added to the index. Each line much be a valid JSON document.
+	A document ID is required for each document. The ID field can be specified with the -f flag.
+	The default ID field is _id.
+	The document id and its value will be removed from the document before indexing.
+
+	Example:
+	$ cat my_documents.json | opensearch-doc bulk -i my_index -f id
+
+	where my_documents.json is a file containing one JSON document per line:
+
+	{"id": "1", "title": "My first document"}
+	{"id": "2", "title": "My second document"}
+	{"id": "3", "title": "My third document"}
+
+	and so forth.
+
+	`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("bulk started")
 		Bulk(cmd.Flag("index").Value.String(), cmd.Flag("action").Value.String(), cmd.Flag("id_field").Value.String())
@@ -41,7 +60,7 @@ func init() {
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
 	// bulkCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
-	bulkCmd.Flags().StringP("index", "i", "", "The index to add documents to")
+	bulkCmd.Flags().StringP("index", "i", "", "The OpenSearch index for the documents")
 	// require an index flag
 	bulkCmd.MarkFlagRequired("index")
 	bulkCmd.Flags().StringP("id_field", "f", "_id", "The field to use as the document ID")
@@ -98,6 +117,10 @@ func Bulk(index string, action string, idField string) {
 		// get the document Id from the JSON object using the idField
 		documentMap := f.(map[string]interface{})
 		id := documentMap[idField]
+		if id == nil {
+			log.Printf("Error: document does not contain an value for the idField '%s'; not adding", idField)
+			continue
+		}
 		// Coerce the id to a string
 		idString := fmt.Sprintf("%v", id)
 		// remove the id field from the JSON object
@@ -129,7 +152,7 @@ func Bulk(index string, action string, idField string) {
 					item opensearchutil.BulkIndexerItem,
 					res opensearchutil.BulkIndexerResponseItem,
 				) {
-					fmt.Printf("[%d] %s test/%s", res.Status, res.Result, item.DocumentID)
+					fmt.Printf("[%d] %s %s\n", res.Status, res.Result, item.DocumentID)
 				},
 
 				// OnFailure is the optional callback for each failed operation

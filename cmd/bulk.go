@@ -69,7 +69,7 @@ func init() {
 
 func Bulk(index string, action string, idField string) {
 	fmt.Println("bulk called")
-
+	// TODO: add support for other configuration options
 	client, err := opensearch.NewClient(opensearch.Config{
 		// Retry on 429 TooManyRequests statuses
 		//
